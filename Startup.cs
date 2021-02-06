@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using ScreenShareApp.Hubs;
+using ScreenShareApp.Database;
 
 namespace ScreenShareApp
 {
@@ -28,6 +30,8 @@ namespace ScreenShareApp
         {
 
             services.AddControllers();
+            services.AddSignalR();
+            services.AddSingleton<ITempDb,TempDatabase>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ScreenShareApp", Version = "v1" });
@@ -44,7 +48,13 @@ namespace ScreenShareApp
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ScreenShareApp v1"));
             }
 
-            app.UseHttpsRedirection();
+             app.UseCors(builder =>
+            {
+              builder.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+            });
+
+           // app.UseHttpsRedirection();
 
             app.UseRouting();
 
@@ -53,6 +63,7 @@ namespace ScreenShareApp
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<ScreenShareHub>("/hub");
             });
         }
     }
